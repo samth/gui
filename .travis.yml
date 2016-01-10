@@ -36,12 +36,11 @@ install:
 - cat catalog-config.txt
 - raco pkg config -i --set catalogs `cat catalog-config.txt`
 - raco pkg config -i
-- raco pkg install -i --deps search-auto $PKG $PKG-test
+- raco pkg install --no-setup -i --deps search-auto $PKG-lib $PKG-test
 - ls $HOME/.racket/download-cache
 
 
 script:
-- raco test -p $PKG
+- raco setup -D
 - raco test -p $PKG-lib
-- raco test -p $PKG-doc
 - raco test -p $PKG-test
