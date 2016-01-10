@@ -2,7 +2,7 @@
 
 (define collection 'multi)
 
-(define deps '("base" "string-constants-lib"))
+(define deps '("base" "string-constants-lib" "icons"))
 (define build-deps '("racket-index"
                      "scheme-lib"
                      "draw-lib"
