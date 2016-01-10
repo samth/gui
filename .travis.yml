@@ -25,12 +25,9 @@ install:
 - racket -l- pkg/dirs-catalog --link --check-metadata pkgs-catalog .
 - echo file://`pwd`/pkgs-catalog/ > catalog-config.txt
 - raco pkg config catalogs >> catalog-config.txt
+- cat catalog-config.txt
 - raco pkg config --set catalogs `cat catalog-config.txt`
-- raco pkg install -i --deps search-auto $PKG $PKG-test
+- raco pkg config
+- raco pkg install -i --deps search-auto gui-lib
 - ls $HOME/.racket/download-cache
 
-script:
-- raco test -p $PKG
-- raco test -p $PKG-lib
-- raco test -p $PKG-doc
-- raco test -p $PKG-test
