@@ -1,5 +1,9 @@
 #lang racket/gui
 
+(module+ test
+  (module config info
+    (define lock-name "x-server")))
+
 (require racket/class racket/runtime-path (only-in mzlib/etc opt-lambda))
 
 (define my-txt #f)

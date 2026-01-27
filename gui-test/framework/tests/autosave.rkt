@@ -1,4 +1,9 @@
 #lang racket
+
+(module+ test
+  (module config info
+    (define lock-name "x-server")))
+
 (require rackunit framework string-constants
          racket/gui/base
          "test-suite-utils.rkt")

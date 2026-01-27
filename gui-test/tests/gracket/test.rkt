@@ -1,5 +1,9 @@
 #lang racket/load
 
+(module+ test
+  (module config info
+    (define lock-name "x-server")))
+
 (require racket/gui)
 
 (load-relative "editor.rktl")

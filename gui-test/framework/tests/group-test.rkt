@@ -1,4 +1,9 @@
 #lang racket/base
+
+(module+ test
+  (module config info
+    (define lock-name "x-server")))
+
 (require "private/util.rkt"
          "private/gui.rkt"
          rackunit
