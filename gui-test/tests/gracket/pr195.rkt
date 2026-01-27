@@ -1,5 +1,9 @@
 #lang racket/gui
 
+(module+ test
+  (module config info
+    (define lock-name "x-server")))
+
 ;; Test case for https://github.com/racket/gui/pull/195, note that with the
 ;; bug present, this code should hang and not terminate.
 

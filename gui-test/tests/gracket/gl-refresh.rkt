@@ -1,4 +1,9 @@
 #lang racket/gui
+
+(module+ test
+  (module config info
+    (define lock-name "x-server")))
+
 (require sgl)
 
 (define c%
