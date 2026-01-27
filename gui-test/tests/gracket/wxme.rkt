@@ -1243,17 +1243,20 @@
 (send t set-position 8)
 (send t paste 0) ;; probably uses the snip% `copy' method
 (expect (send t get-text) "one\ntwo\none")
-(define (move-to-serialized-clipboard)
-  (let ([data (send the-clipboard get-clipboard-data "WXME" 0)])
-    (send the-clipboard set-clipboard-client
-          (new (class clipboard-client%
-                 (inherit add-type)
-                 (super-new)
-                 (add-type "WXME")
-                 (define/override (get-data format) data)))
-          0)))
-(move-to-serialized-clipboard)
-(send t paste 0) ;; uses above clipboard
+;; Test WXME serialization roundtrip: save editor `src` to WXME
+;; bytes, then load into editor `dest`.  This avoids going through
+;; the X11 clipboard protocol (which is racy when other processes
+;; share the same X display, as on DrDr).
+(define (paste-via-wxme-roundtrip dest src)
+  (define out (open-output-bytes))
+  (send src save-port out 'standard)
+  (send dest insert-port (open-input-bytes (get-output-bytes out))))
+;; For the text roundtrip: the last paste put "one" at position 8,
+;; so t currently has "one\ntwo\none".  We create a temp editor with
+;; the copied text "one", serialize it, and load it.
+(let ([tmp (new text%)])
+  (send tmp insert "one")
+  (paste-via-wxme-roundtrip t tmp))
 (expect (send t get-text) "one\ntwo\noneone")
 (send the-clipboard set-clipboard-string "\u3BB" 0)
 (send t paste 0)
@@ -1666,8 +1669,10 @@
 (expect (send oe last-position) 2)
 (define es2 (send oe find-snip 1 'after-or-none))
 (check-border es2)
-(move-to-serialized-clipboard)
-(send oe paste 0) ;; uses above clipboard
+;; WXME roundtrip: serialize an editor-snip and load it
+(let ([tmp (new text%)])
+  (send tmp insert (send es copy))
+  (paste-via-wxme-roundtrip oe tmp))
 (define es3 (send oe find-snip 2 'after-or-none))
 (check-border es3)
 (expect (send es3 border-visible?) #t)
