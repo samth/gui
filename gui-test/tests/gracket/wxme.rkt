@@ -251,6 +251,15 @@
 
 (send s-modern+nonunderlined set-shift-style s-modern+nonunderlined) ; would create cycle
 
+(let ()
+  (define sl (new style-list%))
+  (define a (send sl find-or-create-style (send sl basic-style)
+                  (make-object style-delta% 'change-bold)))
+  (define b (send sl find-or-create-style (send sl basic-style)
+                  (make-object style-delta% 'change-italic)))
+  (send a set-base-style b)
+  (expect (object=? (send a get-base-style) b) #t))
+
 (define sl2 (new style-list%))
 (define s2-modern (send sl2 convert s-modern))
 (expect (send s2-modern get-family) 'modern)
