@@ -150,6 +150,10 @@
       (define -notify-callback notify-callback)
       
       (define/override (notify) (-notify-callback))
+
+      (define/override (callback-name)
+        (or (and (not (eq? -notify-callback void)) (object-name -notify-callback))
+            (object-name this)))
       
       (super-make-object)
 
