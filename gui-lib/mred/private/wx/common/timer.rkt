@@ -6,6 +6,11 @@
 
 (provide timer%)
 
+(define (callback-name-for name)
+  (if name
+      (string->symbol (format "timer:~a" name))
+      'timer))
+
 ;; FIXME: need checks
 (defclass timer% object%
   (init [notify-callback void]
@@ -21,6 +26,12 @@
     (error (method-name 'timer% 'start) "current eventspace is shutdown: ~e" es))
 
   (def/public (interval) current-interval)
+  ;; The name to give the timer's queued callback, so that logging and
+  ;; backtraces say which timer ran; a subclass that overrides `notify`
+  ;; can say what that runs
+  (def/public (callback-name)
+    (or (and (not (eq? notify-cb void)) (object-name notify-cb))
+        (object-name this)))
   (define/private (do-start msec once?)
     (as-entry
      (lambda ()
@@ -31,14 +42,16 @@
        (set! current-once? (and once? #t))
        (letrec ([new-cb
                  (make-timer-callback (+ msec (current-inexact-milliseconds))
-                                      (lambda ()
-                                        (when (eq? cb new-cb)
-                                          (notify)
-                                          (as-entry
-                                           (lambda ()
-                                             (unless once?
-                                               (when (eq? cb new-cb)
-                                                 (do-start msec #f))))))))])
+                                      (procedure-rename
+                                       (lambda ()
+                                         (when (eq? cb new-cb)
+                                           (notify)
+                                           (as-entry
+                                            (lambda ()
+                                              (unless once?
+                                                (when (eq? cb new-cb)
+                                                  (do-start msec #f)))))))
+                                       (callback-name-for (callback-name))))])
          (set! cb new-cb)
          (add-timer-callback new-cb es)))))
   (def/public (start [(integer-in 0 1000000000) msec] [any? [once? #f]])
