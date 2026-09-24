@@ -429,7 +429,26 @@
 ;; name : (or/c #f symbol?)
 (struct gui-event (start end name) #:prefab)
 
+;; An event callback must not start or finish in atomic mode: no other
+;; Racket thread can run until atomic mode ends, so a callback that leaves
+;; it on (say, by escaping from an `atomically` region) hangs everything
+;; that waits on another thread. Report such callbacks, a few times.
+(define atomic-reports-left 5)
+(define (report-atomic-callback! thunk phase)
+  (when (positive? atomic-reports-left)
+    (set! atomic-reports-left (sub1 atomic-reports-left))
+    (log-error "racket/gui: event callback ~a ~a in atomic mode; other threads cannot run"
+               (or (object-name thunk) thunk)
+               phase)))
+
 (define (handle-event thunk e)
+  (when (in-atomic-mode?)
+    (report-atomic-callback! thunk "started"))
+  (handle-event* thunk e)
+  (when (in-atomic-mode?)
+    (report-atomic-callback! thunk "returned")))
+
+(define (handle-event* thunk e)
   (call-with-continuation-prompt ; to delimit continuations
    (lambda ()
      (call-with-continuation-prompt ; to delimit search for dispatch-event-key
