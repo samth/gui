@@ -178,9 +178,14 @@
                                                             (list (car all-data) (car all-data))
                                                             (loop (cdr all-data) (cdr orig-types)))))))
                         (values orig-types types all-data))])
-        (let ([target-strings (malloc 'raw _byte (+ (length types)
-                                                    (apply + (map string-utf-8-length types))))]
-              [targets (malloc _GtkTargetEntry (length types))])
+        ;; 'atomic-interior, so the arrays cannot move: `gtk_clipboard_set_with_data`
+        ;; can call back into Racket (via the previous owner's `clear_owner`)
+        ;; before it reads them, and a GC during that callback would move
+        ;; other GC-managed memory
+        (let ([target-strings (malloc (+ (length types)
+                                         (apply + (map string-utf-8-length types)))
+                                      'atomic-interior)]
+              [targets (malloc _GtkTargetEntry (length types) 'atomic-interior)])
           (for/fold ([offset 0]) ([str (in-list types)]
                                   [i (in-naturals)])
             (let ([t (ptr-add targets i _GtkTargetEntry)])
@@ -208,7 +213,8 @@
                                           clear_owner
                                           this-box)))
 
-          (free target-strings)))))
+          ;; GTK has copied the targets by now
+          (void/reference-sink targets target-strings)))))
 
   (define/public (replaced s-box)
     ;; In atomic mode
