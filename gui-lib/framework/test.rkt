@@ -134,6 +134,13 @@
 ;; Note: never more than one timer (of ours) on real event queue.
 ;; 
 
+;; An exception in an action is kept and raised later in the test's
+;; thread; if that thread never runs again (say, because the handler
+;; thread is stuck), the exception is never seen. Log it when it happens,
+;; at warning level so that tests that expect exceptions stay quiet; see
+;; them with PLTSTDERR="warning@framework/test".
+(define-logger framework/test)
+
 (define run-one
   (let ([yield-semaphore (make-semaphore 0)]
         [thread-semaphore (make-semaphore 0)])
@@ -158,6 +165,9 @@
                       (begin-action)
                       (call-with-exception-handler
                        (λ (exn)
+                         (log-framework/test-warning
+                          "exception in a test action: ~a"
+                          (if (exn? exn) (exn-message exn) exn))
                          (end-action-with-error exn)
                          ((error-escape-handler)))
                        thunk)
