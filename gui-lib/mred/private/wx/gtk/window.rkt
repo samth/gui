@@ -86,12 +86,17 @@
 (define-gtk gtk_widget_get_screen (_fun _GtkWidget -> _GdkScreen))
 (define-gdk gdk_display_warp_pointer (_fun _GdkDisplay _GdkScreen _int _int -> _void))
 
+;; These structs are passed to GTK functions that can call back into
+;; Racket; 'atomic-interior keeps them from moving in a collection during
+;; such a callback, since GTK would then read or write the old location
 (define-cstruct _GtkRequisition ([width _int]
-                                 [height _int]))
+                                 [height _int])
+  #:malloc-mode 'atomic-interior)
 (define-cstruct _GtkAllocation ([x _int]
                                 [y _int]
                                 [width _int]
-                                [height _int]))
+                                [height _int])
+  #:malloc-mode 'atomic-interior)
 
 (define-gtk gtk_widget_size_request (_fun _GtkWidget _GtkRequisition-pointer -> _void))
 (define-gtk gtk_widget_size_allocate (_fun _GtkWidget _GtkAllocation-pointer -> _void))
