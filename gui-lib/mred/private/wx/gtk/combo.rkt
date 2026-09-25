@@ -51,7 +51,9 @@
                                  _uint
                                  _GQuark
                                  _pointer
-                                 (r : (_ptr o _gboolean))
+                                 ;; GLib writes the result after running handlers,
+                                 ;; which can collect, so the result must not move
+                                 (r : (_ptr o _gboolean atomic-interior))
                                  -> _void
                                  -> r))
 
