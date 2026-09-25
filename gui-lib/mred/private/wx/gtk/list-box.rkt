@@ -18,10 +18,14 @@
 
 ;; ----------------------------------------
 
+;; `gtk_list_store_remove` runs Racket's "changed" handler for the
+;; selection and then writes to the iterator; 'atomic-interior keeps the
+;; iterator from moving in a collection during that handler
 (define-cstruct _GtkTreeIter ([stamp _int]
                               [user_data _pointer]
                               [user_data2 _pointer]
-                              [user_data3 _pointer]))
+                              [user_data3 _pointer])
+  #:malloc-mode 'atomic-interior)
 
 (define _GtkListStore (_cpointer 'GtkListStore))
 (define _GtkCellRenderer (_cpointer 'GtkCellRenderer))
