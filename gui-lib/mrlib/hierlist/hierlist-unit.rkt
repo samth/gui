@@ -63,20 +63,24 @@
 	  (override* [draw (lambda (dc x y left top right bottom dx dy draw-caret) (void))])
           (super-make-object void)))
 
-      ;; Keymap to map clicks and double-clicks
-      (define item-keymap (make-object keymap%))
-
-      (send item-keymap add-function "mouse-select"
-	    (lambda (edit event) (when (send event button-down?)
-                                   (send edit click-select #t)
-				   ;; To handle hypertext clicks:
-				   (send edit on-default-event event))))
-      (send item-keymap add-function "mouse-double-select"
-	    (lambda (edit event) (when (send event button-down?)
-				   (send edit double-select))))
-      
-      (send item-keymap map-function "leftbutton" "mouse-select")
-      (send item-keymap map-function "leftbuttondouble" "mouse-double-select")
+      ;; Keymap to map clicks and double-clicks. Each item's editor gets its
+      ;; own, since a keymap recognizes a double-click by the position and
+      ;; time of the previous click that it handled: with a shared keymap,
+      ;; single clicks at the same position in two items, or in two lists,
+      ;; looked like a double-click.
+      (define (make-item-keymap)
+        (define item-keymap (make-object keymap%))
+        (send item-keymap add-function "mouse-select"
+              (lambda (edit event) (when (send event button-down?)
+                                     (send edit click-select #t)
+                                     ;; To handle hypertext clicks:
+                                     (send edit on-default-event event))))
+        (send item-keymap add-function "mouse-double-select"
+              (lambda (edit event) (when (send event button-down?)
+                                     (send edit double-select))))
+        (send item-keymap map-function "leftbutton" "mouse-select")
+        (send item-keymap map-function "leftbuttondouble" "mouse-double-select")
+        item-keymap)
 
       (define hierarchical-list-item<%>
 	(interface ()
@@ -258,7 +262,7 @@
 	    [do-edit-operation (lambda (x [r? #t] [time 0]) (send top do-edit-operation x r? time))])
           (super-make-object)
           (hide-caret #t)
-          (set-keymap item-keymap)))
+          (set-keymap (make-item-keymap))))
       
       ;; Buffer for a compound list item (and the top-level list)
       (define (make-hierarchical-list-text% super%)
