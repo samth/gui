@@ -36,7 +36,8 @@
 				    [format _int]
 				    [data _pointer]
 				    [length _int]
-				    [display _GtkDisplay]))
+				    [display _GtkDisplay])
+  #:malloc-mode 'atomic-interior)
 				  
 (define _GtkSelectionData _GtkSelectionDataT-pointer)
 
@@ -61,7 +62,8 @@
 
 (define-cstruct _GtkTargetEntry ([target _pointer]
                                  [flags _uint]
-                                 [info _uint]))
+                                 [info _uint])
+  #:malloc-mode 'atomic-interior)
 
 (define (get-data cb sel-data info self-box)
   (send (ptr-ref self-box _scheme) provide-data info sel-data))
@@ -180,7 +182,7 @@
                         (values orig-types types all-data))])
         (let ([target-strings (malloc 'raw _byte (+ (length types)
                                                     (apply + (map string-utf-8-length types))))]
-              [targets (malloc _GtkTargetEntry (length types))])
+              [targets (malloc _GtkTargetEntry (length types) 'atomic-interior)])
           (for/fold ([offset 0]) ([str (in-list types)]
                                   [i (in-naturals)])
             (let ([t (ptr-add targets i _GtkTargetEntry)])
