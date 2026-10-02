@@ -100,7 +100,7 @@
   #:make-fail make-not-available)
 (define-gdk g_application_register (_fun _GtkApplication _pointer _pointer -> _gboolean)
   #:make-fail make-not-available)
-(define-gdk g_application_run (_fun _GtkApplication _int (_vector i _string) -> _gboolean)
+(define-gdk g_application_run (_fun _GtkApplication _int (_vector i _pointer interior) -> _gboolean)
   #:make-fail make-not-available)
 (define-gdk g_application_command_line_get_arguments
   (_fun _GApplicationCommandLine (n : (_ptr o _int atomic-interior)) -> (p : _pointer) -> (values p n))
@@ -123,12 +123,20 @@
 
 (define APPLICATION_HANDLES_COMMAND_LINE 8)
 
+(define (string->immobile-bytes s)
+  (define bstr (string->bytes/utf-8 s))
+  (define len (bytes-length bstr))
+  (define p (malloc (add1 len) 'atomic-interior))
+  (memcpy p bstr len)
+  (ptr-set! p _byte len 0)
+  p)
+
 (define (do-single-instance/gtk)
   (define app (gtk_application_new (build-app-name) APPLICATION_HANDLES_COMMAND_LINE))
   (when (and app
              (g_application_register app #f #f))
     (define args (for/vector ([i (current-command-line-arguments)])
-		   (path->string (path->complete-path i))))
+		   (string->immobile-bytes (path->string (path->complete-path i)))))
     (when (g_application_get_is_remote app)
       (g_application_run app (vector-length args) args)
       (exit 0))

@@ -180,8 +180,9 @@
                                                             (list (car all-data) (car all-data))
                                                             (loop (cdr all-data) (cdr orig-types)))))))
                         (values orig-types types all-data))])
-        (let ([target-strings (malloc 'raw _byte (+ (length types)
-                                                    (apply + (map string-utf-8-length types))))]
+        (let ([target-strings (malloc (+ (length types)
+                                         (apply + (map string-utf-8-length types)))
+                                      'atomic-interior)]
               [targets (malloc _GtkTargetEntry (length types) 'atomic-interior)])
           (for/fold ([offset 0]) ([str (in-list types)]
                                   [i (in-naturals)])
@@ -210,7 +211,7 @@
                                           clear_owner
                                           this-box)))
 
-          (free target-strings)))))
+          (void/reference-sink targets target-strings)))))
 
   (define/public (replaced s-box)
     ;; In atomic mode
