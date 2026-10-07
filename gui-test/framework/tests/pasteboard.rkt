@@ -17,24 +17,16 @@
                  (super-new))))
         (preferences:set 'framework:exit-when-no-frames #f)
         (send f show #t)
-        (channel-put c (send f get-label))))
-     (define frame-label (channel-get c))
-     (define seconds 2)
-     (define resolution 1/100)
-     (let loop ([n (* seconds resolution)])
-       (cond
-         [(zero? n)
-          (error 'test-creation "never saw the frame\n  test: ~a" name)]
-         [(let ([f (get-top-level-focus-window)])
-            (and f (equal? (send f get-label) frame-label)))
-          (void)]
-         [else
-          (sleep resolution)
-          (loop (- n 1))]))
+        (channel-put c f)))
+     (define f (channel-get c))
+     ;; Close `f` itself, not the focus window: DrDr runs all tests on one
+     ;; X display, so another test's window may have the focus. The #f
+     ;; priority lets the eventspace first handle the events from showing `f`.
      (queue-callback
       (λ ()
-        (send (get-top-level-focus-window) close)
-        (channel-put c (void))))
+        (send f close)
+        (channel-put c (void)))
+      #f)
      (channel-get c))))
 
 (define (run-tests)
