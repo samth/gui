@@ -8,6 +8,14 @@
          (only-in framework/private/group
                   pay-attention-to-current-eventspace-has-standard-menus?))
 
+;; activating a frame moves it to the front of the frame group, but the
+;; window manager does that at times the test doesn't control, so these
+;; frames ignore activation
+(define test-frame%
+  (class frame:basic%
+    (define/override (on-activate on?) (void))
+    (super-new)))
+
 (define windows-menu-prefix 
   (let ([basics (list "Bring Frame to Front…" "Most Recent Window"
                       #f)])
@@ -36,7 +44,7 @@
      (λ ()
        (queue-callback
         (λ ()
-          (set! the-first-frame (make-object frame:basic% "first"))
+          (set! the-first-frame (make-object test-frame% "first"))
           (send the-first-frame show #t)))
        (preferences:set 'framework:verify-exit #t)
        (wait-for-frame "first")
@@ -55,7 +63,7 @@
 
    (check-equal?
     (let ()
-      (send (make-object frame:basic% "test") show #t)
+      (send (make-object test-frame% "test") show #t)
       (define ans (map (lambda (x) (send x get-label))
                        (send (group:get-the-frame-group) get-frames)))
       (send (test:get-active-top-level-window) close)
@@ -68,10 +76,10 @@
       (thread
        (λ ()
          (queue-callback
-          (λ () (send (make-object frame:basic% "test1") show #t)))
+          (λ () (send (make-object test-frame% "test1") show #t)))
          (wait-for-frame "test1")
          (queue-callback
-          (λ () (send (make-object frame:basic% "test2") show #t)))
+          (λ () (send (make-object test-frame% "test2") show #t)))
          (wait-for-frame "test2"))))
      (check-equal?
       (let ([frames (send (group:get-the-frame-group) get-frames)])
@@ -88,11 +96,11 @@
        (λ ()
          (queue-callback
           (λ ()
-            (send (make-object frame:basic% "test1") show #t)))
+            (send (make-object test-frame% "test1") show #t)))
          (wait-for-frame "test1")
          (queue-callback
           (λ ()
-            (send (make-object frame:basic% "test2") show #t)))
+            (send (make-object test-frame% "test2") show #t)))
          (wait-for-frame "test2"))))
      (send (test:get-active-top-level-window) close)
      (check-equal?
